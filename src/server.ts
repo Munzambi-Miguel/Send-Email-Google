@@ -5,6 +5,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
+
 dotenv.config();
 
 const app = express();
@@ -28,21 +29,21 @@ interface EmailRequest extends Request {
     file: Express.Multer.File; // Tipagem para o arquivo enviado
 }
 
-app.get('/', (req, res)=>{
+app.get('/', (req, res) => {
     res.status(200).json({ message: 'Api esta a funcionar!' });
 })
 
 
 // Rota para enviar email com anexo PDF
 //@ts-ignore
-app.post('/send-email', upload.single('attachment'), async (req, res)=> {
+app.post('/send-email', upload.single('attachment'), async (req, res) => {
 
     const { to, subject, message } = req.body;
 
-    const username = req.header('username');  
-    const password = req.header('password');  
-    const from = req.header('from');  
-    const port = req.header('port');  
+    const username = req.header('username');
+    const password = req.header('password');
+    const from = req.header('from');
+    const port = req.header('port');
 
     const file = req.file; // Arquivo enviado
 
@@ -89,14 +90,14 @@ app.post('/send-email', upload.single('attachment'), async (req, res)=> {
 
         res.status(200).json({ message: 'Email enviado com sucesso!', info: info.response });
 
-    } catch (error:any) {
+    } catch (error: any) {
         res.status(500).json({ message: 'Erro ao enviar email', error: error.toString() });
     }
 });
 
 
 //@ts-ignore
-app.post('/send-body', upload.single('attachment'), async (req, res)=> {
+app.post('/send-body', upload.single('attachment'), async (req, res) => {
 
     const { to, subject, message, username, password, from, port, name = 'Miguel Buila Show 29 Setembro, 19h' } = req.body;
 
@@ -110,7 +111,7 @@ app.post('/send-body', upload.single('attachment'), async (req, res)=> {
 
     // Configuração do transporte Nodemailer usando variáveis de ambiente
     let transporter = nodemailer.createTransport({
-        
+
         host: process.env.MAIL_HOST,
         port: Number(port),
         secure: false, // Use 'true' se estiver usando SSL/TLS
@@ -147,7 +148,7 @@ app.post('/send-body', upload.single('attachment'), async (req, res)=> {
 
         res.status(200).json({ message: 'Email enviado com sucesso!', info: info.response });
 
-    } catch (error:any) {
+    } catch (error: any) {
         res.status(500).json({ message: 'Erro ao enviar email', error: error.toString() });
     }
 });
@@ -155,7 +156,7 @@ app.post('/send-body', upload.single('attachment'), async (req, res)=> {
 
 //@ts-ignore
 app.post('/send-message', async (req, res) => {
-    const { to, subject, message, username, password, from, port , name = 'Miguel Buila Show 29 Setembro, 19h'} = req.body;
+    const { to, subject, message, username, password, from, port, name = 'Miguel Buila Show 29 Setembro, 19h' } = req.body;
 
     // Configuração do transporte Nodemailer usando variáveis de ambiente
     let transporter = nodemailer.createTransport({
@@ -173,7 +174,7 @@ app.post('/send-message', async (req, res) => {
 
     // Opções do email
     let mailOptions = {
-      
+
         from: `"${name}" <${from}>`,     // Seu email
         to: to,         // Destinatário
         subject: subject,  // Título
@@ -193,7 +194,7 @@ app.post('/send-message', async (req, res) => {
 
 //@ts-ignore
 app.post('/send-cc', async (req, res) => {
-    const { to,  subject, message, username, password, from, port, name = 'Miguel Buila Show 29 Setembro, 19h', cc } = req.body;
+    const { to, subject, message, username, password, from, port, name = 'Miguel Buila Show 29 Setembro, 19h', cc } = req.body;
 
     // Configuração do transporte Nodemailer usando variáveis de ambiente
     let transporter = nodemailer.createTransport({
@@ -234,8 +235,9 @@ app.post('/send-cc', async (req, res) => {
 
 
 
+
 // Iniciar o servidor
 app.listen({
-    host:'0.0.0.0',
-    port: process.env.PORT?Number(process.env.PORT):1587
+    host: '0.0.0.0',
+    port: process.env.PORT ? Number(process.env.PORT) : 1587
 });
