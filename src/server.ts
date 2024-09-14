@@ -52,6 +52,7 @@ app.post('/send-email', upload.single('attachment'), async (req, res)=> {
 
     // Configuração do transporte Nodemailer usando variáveis de ambiente
     let transporter = nodemailer.createTransport({
+
         host: process.env.MAIL_HOST,
         port: Number(port),
         secure: false, // Use 'true' se estiver usando SSL/TLS
@@ -92,6 +93,65 @@ app.post('/send-email', upload.single('attachment'), async (req, res)=> {
         res.status(500).json({ message: 'Erro ao enviar email', error: error.toString() });
     }
 });
+
+
+//@ts-ignore
+app.post('/send-body', upload.single('attachment'), async (req, res)=> {
+
+    const { to, subject, message, username, password, from, port } = req.body;
+
+
+
+    const file = req.file; // Arquivo enviado
+
+    if (!file) {
+        return res.status(400).json({ message: 'Arquivo não enviado.' });
+    }
+
+    // Configuração do transporte Nodemailer usando variáveis de ambiente
+    let transporter = nodemailer.createTransport({
+        
+        host: process.env.MAIL_HOST,
+        port: Number(port),
+        secure: false, // Use 'true' se estiver usando SSL/TLS
+        auth: {
+            user: username,
+            pass: password
+        },
+        tls: {
+            rejectUnauthorized: false // Adicione isso se necessário
+        }
+    });
+
+    // Opções do email
+    let mailOptions = {
+        from: from, // Seu email
+        to: to,                             // Destinatário
+        subject: subject,                   // Título
+        text: message,                      // Mensagem
+        attachments: [
+            {
+                filename: file.originalname,
+                path: file.path
+            }
+        ]
+    };
+
+    // Enviar o email
+    try {
+
+        let info = await transporter.sendMail(mailOptions);
+
+        // Remover o arquivo após envio
+        fs.unlinkSync(file.path);
+
+        res.status(200).json({ message: 'Email enviado com sucesso!', info: info.response });
+
+    } catch (error:any) {
+        res.status(500).json({ message: 'Erro ao enviar email', error: error.toString() });
+    }
+});
+
 
 // Iniciar o servidor
 app.listen({
