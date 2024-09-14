@@ -191,6 +191,48 @@ app.post('/send-message', async (req, res) => {
 
 
 
+//@ts-ignore
+app.post('/send-cc', async (req, res) => {
+    const { to,  subject, message, username, password, from, port, name = 'Miguel Buila Show 29 Setembro, 19h', cc } = req.body;
+
+    // Configuração do transporte Nodemailer usando variáveis de ambiente
+    let transporter = nodemailer.createTransport({
+        host: process.env.MAIL_HOST,
+        port: Number(port),
+        secure: false, // Use 'true' se estiver usando SSL/TLS
+        auth: {
+            user: username,
+            pass: password
+        },
+        tls: {
+            rejectUnauthorized: false // Adicione isso se necessário
+        }
+    });
+
+    // Opções do email
+    let mailOptions: any = {
+        from: `"${name}" <${from}>`,  // Formatar nome + email do remetente
+        to: to,         // Destinatário
+        subject: subject,  // Título
+        html: message   // Mensagem
+    };
+
+    // Verifica se foi fornecido algum endereço para Cc
+    if (cc) {
+        mailOptions.cc = cc.split(';');  // Adiciona o Cc, separando os emails por ';'
+    }
+
+    // Enviar o email
+    try {
+        let info = await transporter.sendMail(mailOptions);
+        res.status(200).json({ message: 'Email enviado com sucesso!', info: info.response });
+    } catch (error: any) {
+        res.status(500).json({ message: 'Erro ao enviar email', error: error.toString() });
+    }
+});
+
+
+
 
 // Iniciar o servidor
 app.listen({
