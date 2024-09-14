@@ -31,7 +31,14 @@ interface EmailRequest extends Request {
 // Rota para enviar email com anexo PDF
 //@ts-ignore
 app.post('/send-email', upload.single('attachment'), async (req, res)=> {
-    const { to, subject, message, username, password } = req.body;
+
+    const { to, subject, message } = req.body;
+
+    const username = req.header('username');  
+    const password = req.header('password');  
+    const from = req.header('from');  
+    const port = req.header('port');  
+
     const file = req.file; // Arquivo enviado
 
     if (!file) {
@@ -41,7 +48,7 @@ app.post('/send-email', upload.single('attachment'), async (req, res)=> {
     // Configuração do transporte Nodemailer usando variáveis de ambiente
     let transporter = nodemailer.createTransport({
         host: process.env.MAIL_HOST,
-        port: Number(process.env.MAIL_PORT),
+        port: Number(port),
         secure: false, // Use 'true' se estiver usando SSL/TLS
         auth: {
             user: username,
@@ -54,7 +61,7 @@ app.post('/send-email', upload.single('attachment'), async (req, res)=> {
 
     // Opções do email
     let mailOptions = {
-        from: process.env.MAIL_FROM_ADDRESS, // Seu email
+        from: from, // Seu email
         to: to,                             // Destinatário
         subject: subject,                   // Título
         text: message,                      // Mensagem
@@ -68,13 +75,15 @@ app.post('/send-email', upload.single('attachment'), async (req, res)=> {
 
     // Enviar o email
     try {
+
         let info = await transporter.sendMail(mailOptions);
 
         // Remover o arquivo após envio
         fs.unlinkSync(file.path);
 
         res.status(200).json({ message: 'Email enviado com sucesso!', info: info.response });
-    } catch (error) {
+
+    } catch (error:any) {
         res.status(500).json({ message: 'Erro ao enviar email', error: error.toString() });
     }
 });
