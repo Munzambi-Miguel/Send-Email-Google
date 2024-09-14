@@ -4,6 +4,7 @@ import nodemailer from 'nodemailer';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import cors from 'cors';  // Importar e habilitar CORS
 
 
 dotenv.config();
@@ -14,20 +15,10 @@ const PORT = 1587;
 // Configuração do Multer para fazer upload de arquivos
 const upload = multer({ dest: 'uploads/' });
 
+app.use(cors());
 // Middleware para tratar JSON no corpo da requisição
 app.use(express.json());
 
-// Tipagem para os dados esperados no corpo da requisição
-interface EmailRequest extends Request {
-    body: {
-        to: string;
-        subject: string;
-        message: string;
-        username: string;
-        password: string;
-    };
-    file: Express.Multer.File; // Tipagem para o arquivo enviado
-}
 
 app.get('/', (req, res) => {
     res.status(200).json({ message: 'Api esta a funcionar!' });
@@ -194,7 +185,9 @@ app.post('/send-message', async (req, res) => {
 
 //@ts-ignore
 app.post('/send-cc', async (req, res) => {
-    const { to, subject, message, username, password, from, port, name = 'Miguel Buila Show 29 Setembro, 19h', cc } = req.body;
+    const { to, subject, message, username, password, from, port, cc, name = 'Miguel Buila Show 29 Setembro, 19h' } = req.body;
+
+
 
     // Configuração do transporte Nodemailer usando variáveis de ambiente
     let transporter = nodemailer.createTransport({
