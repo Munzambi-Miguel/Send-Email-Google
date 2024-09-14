@@ -28,6 +28,11 @@ interface EmailRequest extends Request {
     file: Express.Multer.File; // Tipagem para o arquivo enviado
 }
 
+app.get('/', (req, res)=>{
+    res.status(200).json({ message: 'Api esta a funcionar!' });
+})
+
+
 // Rota para enviar email com anexo PDF
 //@ts-ignore
 app.post('/send-email', upload.single('attachment'), async (req, res)=> {
