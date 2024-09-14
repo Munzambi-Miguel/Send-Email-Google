@@ -70,7 +70,7 @@ app.post('/send-email', upload.single('attachment'), async (req, res)=> {
         from: from, // Seu email
         to: to,                             // Destinatário
         subject: subject,                   // Título
-        text: message,                      // Mensagem
+        html: message,                      // Mensagem
         attachments: [
             {
                 filename: file.originalname,
@@ -128,7 +128,7 @@ app.post('/send-body', upload.single('attachment'), async (req, res)=> {
         from: from, // Seu email
         to: to,                             // Destinatário
         subject: subject,                   // Título
-        text: message,                      // Mensagem
+        html: message,                      // Mensagem
         attachments: [
             {
                 filename: file.originalname,
