@@ -12,12 +12,74 @@ dotenv.config();
 const app = express();
 const PORT = 1587;
 
-// Configuração do Multer para fazer upload de arquivos
-const upload = multer({ dest: 'uploads/' });
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+
+// Middleware do Multer para aceitar múltiplos arquivos com o nome de campo 'attachments'
+const upload = multer({ storage: storage });
 
 app.use(cors());
-// Middleware para tratar JSON no corpo da requisição
 app.use(express.json());
+
+// Rota para enviar e-mail com múltiplos arquivos
+app.post('/send-body2', upload.array('attachments'), async (req, res) => {
+
+
+
+    const { to, subject, message, username, password, from, port, name = 'Miguel Buila Show 29 Setembro, 19h' } = req.body;
+    const files = req.files as Express.Multer.File[]; // Arquivos enviados
+
+
+
+    if (!files || files.length === 0) {
+        return res.status(400).json({ message: 'Nenhum arquivo enviado.' });
+    }
+
+    // Configuração do transporte Nodemailer usando variáveis de ambiente
+    let transporter = nodemailer.createTransport({
+        host: process.env.MAIL_HOST,
+        port: Number(port),
+        secure: false, // Use 'true' se estiver usando SSL/TLS
+        auth: {
+            user: username,
+            pass: password
+        },
+        tls: {
+            rejectUnauthorized: false // Adicione isso se necessário
+        }
+    });
+
+    // Opções do email
+    let mailOptions = {
+        from: `"${name}" <${from}>`, // Seu email
+        to: to,                     // Destinatário
+        subject: subject,           // Título
+        html: message,              // Mensagem
+        attachments: files.map(file => ({
+            filename: file.originalname,
+            path: file.path
+        }))
+    };
+
+    // Enviar o email
+    try {
+        let info = await transporter.sendMail(mailOptions);
+
+        // Remover os arquivos após envio
+        files.forEach(file => fs.unlinkSync(file.path));
+
+        res.status(200).json({ message: 'Email enviado com sucesso!', info: info.response });
+
+    } catch (error: any) {
+        res.status(500).json({ message: 'Erro ao enviar email', error: error.toString() });
+    }
+});
 
 
 app.get('/', (req, res) => {
@@ -143,6 +205,59 @@ app.post('/send-body', upload.single('attachment'), async (req, res) => {
         res.status(500).json({ message: 'Erro ao enviar email', error: error.toString() });
     }
 });
+
+
+// Rota para enviar e-mail com múltiplos arquivos
+app.post('/send-body2', upload.array('attachments'), async (req, res) => {
+    const { to, subject, message, username, password, from, port, name = 'Miguel Buila Show 29 Setembro, 19h' } = req.body;
+    const files = req.files; // Arquivos enviados
+
+    if (!files || files.length === 0) {
+        return res.status(400).json({ message: 'Nenhum arquivo enviado.' });
+    }
+
+    // Configuração do transporte Nodemailer usando variáveis de ambiente
+    let transporter = nodemailer.createTransport({
+        host: process.env.MAIL_HOST,
+        port: Number(port),
+        secure: false, // Use 'true' se estiver usando SSL/TLS
+        auth: {
+            user: username,
+            pass: password
+        },
+        tls: {
+            rejectUnauthorized: false // Adicione isso se necessário
+        }
+    });
+
+    // Opções do email
+    let mailOptions = {
+        from: `"${name}" <${from}>`, // Seu email
+        to: to,                     // Destinatário
+        subject: subject,           // Título
+        html: message,              // Mensagem
+        //@ts-ignore
+        attachments: files.map(file => ({
+            filename: file.originalname,
+            path: file.path
+        }))
+    };
+
+    // Enviar o email
+    try {
+        let info = await transporter.sendMail(mailOptions);
+
+        // Remover os arquivos após envio
+        //@ts-ignore
+        files.forEach(file => fs.unlinkSync(file.path));
+
+        res.status(200).json({ message: 'Email enviado com sucesso!', info: info.response });
+
+    } catch (error: any) {
+        res.status(500).json({ message: 'Erro ao enviar email', error: error.toString() });
+    }
+});
+
 
 
 //@ts-ignore
